@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consumo de Água no Brasil (2015–2024) | Projeto G1</title>
+  <meta name="description"
+    content="Projeto de análise e visualização de dados sobre o consumo de água no Brasil entre 2015 e 2024, com Python, Pandas, Seaborn, Plotly, SQLite e Streamlit.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --leito: #F2F5F4;
+      --papel: #FFFFFF;
+      --tinta: #12262E;
+      --tinta-suave: #4A5D63;
+      --agua: #1F6F8B;
+      --agua-funda: #12394A;
+      --agua-rasa: #CFE4E8;
+      --ocre: #B7791F;
+      --linha: #D5DEDF;
+      --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
+      --serif: "Literata", Georgia, "Times New Roman", serif;
+      --largura: 72rem;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--leito);
+      color: var(--tinta);
+      font-family: var(--serif);
+      font-size: 1.0625rem;
+      line-height: 1.7;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    a {
+      color: var(--agua);
+      text-underline-offset: 3px;
+    }
+
+    a:hover {
+      color: var(--agua-funda);
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--ocre);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+
+    .conteiner {
+      max-width: var(--largura);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .topo {
+      border-bottom: 1px solid var(--linha);
+      background: var(--papel);
+    }
+
+    .topo .conteiner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-top: 0.9rem;
+      padding-bottom: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .marca {
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--tinta);
+      text-decoration: none;
+    }
+
+    .topo nav {
+      display: flex;
+      gap: 1.4rem;
+      flex-wrap: wrap;
+    }
+
+    .topo nav a {
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      color: var(--tinta-suave);
+      text-decoration: none;
+    }
+
+    .topo nav a:hover {
+      color: var(--agua);
+      text-decoration: underline;
+    }
+
+    .abertura {
+      padding: 4.5rem 0 4rem;
+    }
+
+    .abertura .conteiner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4rem;
+      align-items: end;
+    }
+
+    h1 {
+      font-family: var(--sans);
+      font-stretch: 112%;
+      font-weight: 800;
+      font-size: clamp(2.6rem, 6vw, 4.6rem);
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      margin: 0 0 1.5rem;
+      max-width: 14ch;
+    }
+
+    .lide {
+      font-size: 1.2rem;
+      line-height: 1.65;
+      max-width: 38rem;
+      margin: 0 0 2rem;
+      color: var(--tinta);
+    }
+
+    .acoes {
+      display: flex;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .botao {
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.8rem 1.4rem;
+      border-radius: 4px;
+      text-decoration: none;
+      border: 2px solid var(--agua-funda);
+    }
+
+    .botao.principal {
+      background: var(--agua-funda);
+      color: #fff;
+    }
+
+    .botao.principal:hover {
+      background: var(--agua);
+      border-color: var(--agua);
+      color: #fff;
+    }
+
+    .botao.secundario {
+      color: var(--agua-funda);
+      background: transparent;
+    }
+
+    .botao.secundario:hover {
+      background: var(--agua-rasa);
+    }
+
+    .autoria {
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      color: var(--tinta-suave);
+      margin-top: 2.2rem;
+    }
+
+    .reservatorio-bloco {
+      display: grid;
+      grid-template-columns: auto 11rem;
+      gap: 1.2rem;
+      align-items: end;
+    }
+
+    .reservatorio {
+      position: relative;
+      width: 11rem;
+      height: 22rem;
+      border: 3px solid var(--tinta);
+      border-top: none;
+      border-radius: 0 0 1.4rem 1.4rem;
+      background: var(--papel);
+      overflow: hidden;
+    }
+
+    .agua {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 52.2%;
+      background: linear-gradient(180deg, var(--agua) 0%, var(--agua-funda) 100%);
+      animation: encher 2.4s cubic-bezier(.2, .7, .2, 1) both 0.3s;
+    }
+
+    .agua svg {
+      position: absolute;
+      top: -11px;
+      left: 0;
+      width: 200%;
+      height: 12px;
+      animation: onda 6s linear infinite;
+    }
+
+    .agua .valor {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 1.4rem;
+      text-align: center;
+      color: #fff;
+      font-family: var(--sans);
+      font-stretch: 125%;
+      font-weight: 800;
+      font-size: 2.3rem;
+      line-height: 1;
+    }
+
+    .marca-nivel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 2px dashed #E0B566;
+      z-index: 2;
+    }
+
+    .marca-nivel span {
+      position: absolute;
+      right: 0.4rem;
+      top: -1.45rem;
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #F2D29B;
+    }
+
+    .reservatorio-legenda {
+      font-family: var(--sans);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: var(--tinta-suave);
+      padding-bottom: 0.3rem;
+    }
+
+    .reservatorio-legenda strong {
+      color: var(--tinta);
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    @keyframes encher {
+      from {
+        height: 0;
+      }
+
+      to {
+        height: 52.2%;
+      }
+    }
+
+    @keyframes onda {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    section {
+      padding: 4rem 0;
+      border-top: 1px solid var(--linha);
+    }
+
+    section.claro {
+      background: var(--papel);
+    }
+
+    h2 {
+      font-family: var(--sans);
+      font-stretch: 105%;
+      font-weight: 750;
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      margin: 0 0 1.5rem;
+    }
+
+    h3 {
+      font-family: var(--sans);
+      font-weight: 650;
+      font-size: 1.15rem;
+      line-height: 1.35;
+      margin: 0 0 0.4rem;
+    }
+
+    .texto {
+      max-width: 42rem;
+    }
+
+    .texto p {
+      margin: 0 0 1.1rem;
+    }
+
+    .perguntas {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 3.5rem;
+      margin-top: 2rem;
+    }
+
+    .pergunta {
+      padding: 1.4rem 0;
+      border-top: 1px solid var(--linha);
+    }
+
+    .pergunta p {
+      margin: 0;
+      color: var(--tinta-suave);
+    }
+
+    .pergunta p strong {
+      color: var(--tinta);
+      font-weight: 600;
+    }
+
+    .indicadores {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .tabela-kpi {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+    }
+
+    .tabela-kpi th,
+    .tabela-kpi td {
+      text-align: left;
+      padding: 0.95rem 0;
+      border-bottom: 1px solid var(--linha);
+      vertical-align: baseline;
+    }
+
+    .tabela-kpi th {
+      font-weight: 500;
+      color: var(--tinta-suave);
+      font-size: 0.98rem;
+      padding-right: 1.5rem;
+    }
+
+    .tabela-kpi td {
+      font-weight: 700;
+      font-size: 1.3rem;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .tabela-kpi td small {
+      display: block;
+      font-weight: 400;
+      font-size: 0.82rem;
+      color: var(--tinta-suave);
+      white-space: normal;
+    }
+
+    .perda {
+      border-left: 3px solid var(--ocre);
+      padding-left: 1.5rem;
+    }
+
+    .gotas {
+      display: flex;
+      gap: 0.35rem;
+      margin: 0.4rem 0 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .gotas svg {
+      width: 1.9rem;
+      height: 2.6rem;
+    }
+
+    .perda .numero {
+      font-family: var(--sans);
+      font-stretch: 112%;
+      font-weight: 800;
+      font-size: 2.6rem;
+      line-height: 1.05;
+      margin: 0 0 0.6rem;
+    }
+
+    .perda p {
+      margin: 0 0 0.8rem;
+    }
+
+    .graficos {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.8rem 2.5rem;
+      margin-top: 2rem;
+    }
+
+    figure {
+      margin: 0;
+    }
+
+    figure.largo {
+      grid-column: 1 / -1;
+    }
+
+    figure img {
+      background: #fff;
+      border: 1px solid var(--linha);
+      border-radius: 4px;
+    }
+
+    figcaption {
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--tinta-suave);
+      margin-top: 0.8rem;
+      max-width: 46rem;
+    }
+
+    figcaption strong {
+      color: var(--tinta);
+      font-family: var(--sans);
+      font-weight: 650;
+    }
+
+    .recomendacoes {
+      margin: 1.6rem 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .recomendacoes li {
+      padding: 0.9rem 0 0.9rem 1.4rem;
+      border-top: 1px solid var(--linha);
+      position: relative;
+    }
+
+    .recomendacoes li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 1.55rem;
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: var(--agua);
+    }
+
+    .aviso {
+      margin-top: 2rem;
+      padding: 1.1rem 1.3rem;
+      background: var(--agua-rasa);
+      border-radius: 4px;
+      font-size: 0.97rem;
+      max-width: 42rem;
+    }
+
+    .metodo {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .metodo ul {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    .metodo li {
+      margin-bottom: 0.35rem;
+    }
+
+    pre {
+      margin: 0;
+      padding: 1.2rem 1.4rem;
+      background: var(--agua-funda);
+      color: #E6F0F2;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      overflow-x: auto;
+    }
+
+    .arquivos {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0 2.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .arquivo {
+      display: block;
+      padding: 1.2rem 0;
+      border-top: 2px solid var(--tinta);
+      text-decoration: none;
+      color: var(--tinta);
+    }
+
+    .arquivo:hover h3 {
+      color: var(--agua);
+      text-decoration: underline;
+    }
+
+    .arquivo p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--tinta-suave);
+    }
+
+    footer {
+      padding: 2.5rem 0 3rem;
+      border-top: 1px solid var(--linha);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      color: var(--tinta-suave);
+    }
+
+    footer p {
+      margin: 0.2rem 0;
+    }
+
+    @media (max-width: 900px) {
+      .abertura {
+        padding: 3rem 0;
+      }
+
+      .abertura .conteiner,
+      .indicadores {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+
+      .perguntas,
+      .graficos,
+      .metodo,
+      .arquivos {
+        grid-template-columns: 1fr;
+      }
+
+      .reservatorio-bloco {
+        grid-template-columns: auto 1fr;
+      }
+
+      .reservatorio {
+        width: 8.5rem;
+        height: 16rem;
+      }
+
+      .agua .valor {
+        font-size: 1.8rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      .agua,
+      .agua svg {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topo">
+    <div class="conteiner">
+      <a class="marca" href="#">Consumo de Água no Brasil</a>
+      <nav aria-label="Seções da página">
+        <a href="#resultados">Resultados</a>
+        <a href="#indicadores">Indicadores</a>
+        <a href="#graficos">Gráficos</a>
+        <a href="#conclusao">Conclusão</a>
+        <a href="#arquivos">Arquivos</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="abertura">
+      <div class="conteiner">
+        <div>
+          <h1>Consumo de Água no Brasil, 2015 a 2024</h1>
+          <p class="lide">Uma análise de dez anos de medições mensais por estado e setor: onde a água é consumida, se a
+            demanda mudou com o tempo e com a chuva, e quanto se perde antes de chegar ao uso.</p>
+          <div class="acoes">
+            <a class="botao principal" href="https://SEU-APP.streamlit.app">Abrir o dashboard</a>
+            <a class="botao secundario" href="notebooks/analise_consumo_agua.ipynb">Ver o notebook</a>
+          </div>
+          <p class="autoria">Marcus Vinicius Rodrigues da Silva. Projeto G1 de Análise e Visualização de Dados com
+            Python, Tema 7.</p>
+        </div>
+
+        <div class="reservatorio-bloco">
+          <div class="reservatorio" role="img"
+            aria-label="Nível médio dos reservatórios: 52,2% da capacidade. Linha de nível crítico em 30%.">
+            <div class="marca-nivel" style="bottom: 30%"><span>30%</span></div>
+            <div class="agua">
+              <svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0 6 Q12.5 0 25 6 T50 6 T75 6 T100 6 T125 6 T150 6 T175 6 T200 6 V12 H0 Z" fill="#1F6F8B" />
+              </svg>
+              <span class="valor">52,2%</span>
+            </div>
+          </div>
+          <p class="reservatorio-legenda"><strong>Nível médio dos reservatórios</strong>Média de todas as medições.
+            Abaixo de 30% a situação é crítica, e 27% das medições ficaram nessa faixa.</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="claro" id="sobre">
+      <div class="conteiner">
+        <h2>O projeto</h2>
+        <div class="texto">
+          <p>A água sustenta o abastecimento urbano, a agricultura, a indústria e a geração de energia. Crescimento
+            populacional, mudanças climáticas e desperdício tornam o monitoramento do consumo cada vez mais necessário,
+            principalmente em períodos de estiagem.</p>
+          <p>O projeto parte de uma base simulada com 4.440 medições mensais de 20 estados e 5 setores de consumo, com
+            dados de consumo, desperdício, nível dos reservatórios, chuva, temperatura, população e nível de alerta. A
+            análise foi feita em um notebook Python, os dados tratados foram gravados em um banco SQLite e os resultados
+            estão em um dashboard interativo no Streamlit.</p>
+          <p>Um cuidado guiou toda a análise: os estados têm quantidades diferentes de medições por mês. O Rio de
+            Janeiro tem quatro, oito estados têm uma. Por isso, sempre que a comparação é entre estados ou regiões, o
+            consumo total aparece ao lado do consumo médio por medição.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultados">
+      <div class="conteiner">
+        <h2>O que os dados respondem</h2>
+        <div class="perguntas">
+          <div class="pergunta">
+            <h3>Quais estados consomem mais água?</h3>
+            <p><strong>RJ, SP e MG lideram o total</strong>, mas porque têm mais medições. No consumo médio por medição,
+              BA, MA e SC ficam à frente, com diferenças pequenas entre todos.</p>
+          </div>
+          <div class="pergunta">
+            <h3>Existe sazonalidade no consumo?</h3>
+            <p><strong>Não de forma relevante.</strong> O padrão mensal muda de um ano para outro, e o mês de maior
+              consumo médio (junho) supera o de menor (agosto) em menos de 9%.</p>
+          </div>
+          <div class="pergunta">
+            <h3>Quais setores consomem mais?</h3>
+            <p><strong>Agrícola e Residencial</strong>, praticamente empatados com 20,8% do total cada. O setor Público
+              é o que menos consome.</p>
+          </div>
+          <div class="pergunta">
+            <h3>Há regiões mais vulneráveis à escassez?</h3>
+            <p>Pelo índice que combina reservatórios, chuva, desperdício e alertas, <strong>Nordeste e Sudeste</strong>
+              ficam no topo, puxados por CE e SP. O Norte, com mais chuva, é o menos vulnerável.</p>
+          </div>
+          <div class="pergunta">
+            <h3>Existe relação entre estiagem e consumo?</h3>
+            <p><strong>Não.</strong> A correlação entre chuva e consumo é praticamente zero, e o consumo nos meses de
+              estiagem é igual ao dos meses de chuva normal.</p>
+          </div>
+          <div class="pergunta">
+            <h3>O consumo aumentou ao longo do tempo?</h3>
+            <p><strong>Não.</strong> O consumo de 2024 ficou apenas 0,5% acima do de 2015, e a média móvel de 12 meses é
+              praticamente estável.</p>
+          </div>
+          <div class="pergunta">
+            <h3>Quais estados desperdiçam mais?</h3>
+            <p><strong>CE (32,3%), DF (31,8%) e AM (31,3%)</strong>. Mas o desperdício fica perto de 30% em todos os
+              estados, o que indica um problema estrutural.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="claro" id="indicadores">
+      <div class="conteiner">
+        <h2>Indicadores da base completa</h2>
+        <div class="indicadores">
+          <table class="tabela-kpi">
+            <caption class="sr-only" style="position:absolute;left:-9999px">KPIs do projeto</caption>
+            <tbody>
+              <tr>
+                <th scope="row">Consumo total de água</th>
+                <td>92,6 bilhões de litros<small>soma de 2015 a 2024</small></td>
+              </tr>
+              <tr>
+                <th scope="row">Estado com maior consumo</th>
+                <td>RJ<small>pelo total; BA pela média por medição</small></td>
+              </tr>
+              <tr>
+                <th scope="row">Setor que mais consome</th>
+                <td>Agrícola<small>20,8% do total</small></td>
+              </tr>
+              <tr>
+                <th scope="row">Consumo per capita médio</th>
+                <td>266,5 L/dia</td>
+              </tr>
+              <tr>
+                <th scope="row">Média de desperdício</th>
+                <td>30,2%</td>
+              </tr>
+              <tr>
+                <th scope="row">Nível médio dos reservatórios</th>
+                <td>52,2%</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="perda">
+            <div class="gotas" role="img" aria-label="De cada 10 gotas, 3 se perdem">
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="#1F6F8B" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="#1F6F8B" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="#1F6F8B" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="#1F6F8B" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="#1F6F8B" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="#1F6F8B" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="#1F6F8B" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="none" stroke="#B7791F"
+                  stroke-width="2" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="none" stroke="#B7791F"
+                  stroke-width="2" />
+              </svg>
+              <svg viewBox="0 0 20 28" aria-hidden="true">
+                <path d="M10 0 C10 0 0 12 0 18 a10 10 0 0 0 20 0 C20 12 10 0 10 0Z" fill="none" stroke="#B7791F"
+                  stroke-width="2" />
+              </svg>
+            </div>
+            <p class="numero">27,9 bilhões de litros perdidos</p>
+            <p>De cada 10 litros registrados, 3 se perderam. Esse é o achado mais importante do projeto: o desperdício
+              aparece no mesmo patamar em todos os estados e setores, e subiu 1,3 ponto percentual entre 2015 e 2024.
+            </p>
+            <p>Cada ponto percentual a menos de desperdício equivale a cerca de 926 milhões de litros.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="graficos">
+      <div class="conteiner">
+        <h2>Gráficos da análise</h2>
+        <p class="texto">Os gráficos abaixo foram gerados no notebook com Matplotlib e Seaborn. No dashboard, as mesmas
+          análises são interativas e respondem aos filtros de ano, mês, região, estado, setor e nível de alerta.</p>
+        <div class="graficos">
+          <figure class="largo">
+            <img src="imagens/evolucao_temporal.png"
+              alt="Linha do consumo mensal de 2015 a 2024 com média móvel de 12 meses praticamente estável entre 730 e 800 milhões de litros."
+              loading="lazy">
+            <figcaption><strong>Evolução temporal.</strong> O consumo oscila mês a mês, mas a média móvel de 12 meses
+              fica estável: não há tendência de alta.</figcaption>
+          </figure>
+          <figure class="largo">
+            <img src="imagens/heatmap_sazonalidade.png"
+              alt="Heatmap de consumo por ano e mês, sem padrão que se repita entre os anos." loading="lazy">
+            <figcaption><strong>Sazonalidade.</strong> Os meses de maior consumo mudam de posição a cada ano. A
+              sazonalidade é fraca.</figcaption>
+          </figure>
+          <figure class="largo">
+            <img src="imagens/ranking_estados.png"
+              alt="Dois rankings de estados: pelo consumo total, liderado por RJ, SP e MG; e pelo consumo médio por medição, liderado por BA, MA e SC."
+              loading="lazy">
+            <figcaption><strong>Ranking de estados.</strong> O total favorece os estados com mais medições. Na média por
+              medição, o ranking muda e as diferenças diminuem.</figcaption>
+          </figure>
+          <figure>
+            <img src="imagens/setores.png"
+              alt="Consumo total por setor, com Agrícola e Residencial à frente, e boxplots semelhantes entre os setores."
+              loading="lazy">
+            <figcaption><strong>Setores.</strong> Agrícola e Residencial lideram por pouco; as distribuições são
+              parecidas.</figcaption>
+          </figure>
+          <figure>
+            <img src="imagens/chuva_consumo.png"
+              alt="Dispersão entre chuva e consumo e entre chuva e reservatórios, com linhas de regressão horizontais."
+              loading="lazy">
+            <figcaption><strong>Chuva e consumo.</strong> As linhas de regressão são horizontais: a chuva não explica o
+              consumo nem o nível dos reservatórios.</figcaption>
+          </figure>
+          <figure>
+            <img src="imagens/desperdicio.png"
+              alt="Desperdício médio por estado, com CE, DF e AM acima de 31%, e volume perdido acumulado por estado."
+              loading="lazy">
+            <figcaption><strong>Desperdício.</strong> CE, DF e AM têm os maiores percentuais; em volume, o RJ lidera por
+              ter mais medições.</figcaption>
+          </figure>
+          <figure>
+            <img src="imagens/vulnerabilidade.png"
+              alt="Índice de vulnerabilidade à escassez por estado, com CE, SP, PR, MS e PE no topo." loading="lazy">
+            <figcaption><strong>Vulnerabilidade.</strong> CE, SP, PR, MS e PE lideram o índice que combina
+              reservatórios, chuva, desperdício e alertas.</figcaption>
+          </figure>
+          <figure>
+            <img src="imagens/reservatorios.png"
+              alt="Nível médio dos reservatórios por ano, distribuição por faixa e boxplots por nível de alerta."
+              loading="lazy">
+            <figcaption><strong>Reservatórios.</strong> Média entre 50% e 54% ao ano. O nível de alerta da base não
+              acompanha os reservatórios.</figcaption>
+          </figure>
+          <figure>
+            <img src="imagens/correlacao.png"
+              alt="Matriz de correlação de Pearson com todos os coeficientes próximos de zero." loading="lazy">
+            <figcaption><strong>Correlação.</strong> Nenhuma correlação passa de 0,05 em valor absoluto: as variáveis
+              são independentes.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="claro" id="conclusao">
+      <div class="conteiner">
+        <h2>Conclusão</h2>
+        <div class="texto">
+          <p>Nesta base, o consumo de água é estável e homogêneo. Ele não cresce ao longo dos dez anos, não tem
+            sazonalidade forte e não responde a chuva, temperatura ou estiagem. As diferenças de volume total entre
+            estados e regiões vêm sobretudo da quantidade de medições, não de um consumo mais intenso.</p>
+          <p>O que se destaca é a perda. Quase um terço da água registrada não chega ao uso, em todos os estados e
+            setores, enquanto os reservatórios operam em média pouco acima da metade da capacidade. A principal alavanca
+            de gestão é reduzir perdas, e não restringir um setor específico.</p>
+        </div>
+        <ul class="recomendacoes texto">
+          <li>Priorizar programas de redução de perdas, começando pelos estados com maior desperdício percentual: CE, DF
+            e AM.</li>
+          <li>Monitorar os estados que lideram o índice de vulnerabilidade (CE, SP, PR, MS e PE) e os de reservatório
+            médio mais baixo (SC e SP).</li>
+          <li>Revisar o critério de nível de alerta, que hoje não acompanha o nível dos reservatórios.</li>
+          <li>Equilibrar a coleta de dados entre estados, porque a diferença no número de medições distorce as
+            comparações por soma.</li>
+        </ul>
+        <p class="aviso">A base é simulada e suas variáveis foram geradas de forma independente. As conclusões descrevem
+          os dados fornecidos e não a realidade hídrica do Brasil.</p>
+      </div>
+    </section>
+
+    <section id="metodo">
+      <div class="conteiner">
+        <h2>Como foi feito</h2>
+        <div class="metodo">
+          <div>
+            <h3>Análise</h3>
+            <ul>
+              <li>Validação de tipos, ausentes, duplicatas, faixas e outliers</li>
+              <li>Engenharia de atributos: estação, volume perdido, estiagem, faixas de reservatório</li>
+              <li>Séries temporais com média móvel de 12 meses</li>
+              <li>Correlação de Pearson e índice de vulnerabilidade</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Dashboard</h3>
+            <ul>
+              <li>Filtros por ano, mês, região, estado, setor e nível de alerta</li>
+              <li>KPIs dinâmicos e interpretações que se ajustam ao recorte</li>
+              <li>Mapa interativo e gráficos Plotly</li>
+              <li>Tabela dinâmica, upload de CSV e consultas SQL</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Tecnologias</h3>
+            <ul>
+              <li>Python, Pandas e NumPy</li>
+              <li>Matplotlib, Seaborn e Plotly</li>
+              <li>SQLAlchemy e SQLite (modelo relacional)</li>
+              <li>Streamlit, GitHub e GitHub Pages</li>
+            </ul>
+          </div>
+        </div>
+        <pre style="margin-top:2.5rem" aria-label="Estrutura de pastas do projeto">projeto-consumo-agua/
+├── app.py                      dashboard Streamlit
+├── requirements.txt
+├── README.md
+├── index.html                  esta página
+├── dados/
+│   ├── simulacao_consumo_agua_brasil.csv
+│   └── brasil_estados.geojson  contornos dos estados para o mapa
+├── notebooks/
+│   └── analise_consumo_agua.ipynb
+├── database/
+│   └── consumo_agua.sqlite     tabelas estados e medicoes
+└── imagens/                    gráficos gerados pelo notebook</pre>
+      </div>
+    </section>
+
+    <section class="claro" id="arquivos">
+      <div class="conteiner">
+        <h2>Arquivos do projeto</h2>
+        <div class="arquivos">
+          <a class="arquivo" href="https://.streamlit.app">
+            <h3>Dashboard no Streamlit</h3>
+            <p>Explore os dados com filtros, mapa e tabela dinâmica.</p>
+          </a>
+          <a class="arquivo" href="notebooks/analise_consumo_agua.ipynb">
+            <h3>Notebook de análise</h3>
+            <p>Limpeza, KPIs, gráficos, banco de dados e interpretação.</p>
+          </a>
+          <a class="arquivo" href="app.py">
+            <h3>Código do dashboard</h3>
+            <p>O arquivo app.py com toda a aplicação Streamlit.</p>
+          </a>
+          <a class="arquivo" href="dados/simulacao_consumo_agua_brasil.csv" download>
+            <h3>Base de dados</h3>
+            <p>CSV com as 4.440 medições usadas no projeto.</p>
+          </a>
+          <a class="arquivo" href="README.md">
+            <h3>README</h3>
+            <p>Descrição do projeto e instruções para rodar localmente.</p>
+          </a>
+          <a class="arquivo" href="https://github.com/marcusvrds07/Consumo-de-Agua-Analise/">
+            <h3>Repositório no GitHub</h3>
+            <p>Código-fonte completo do projeto.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="conteiner">
+      <p>Marcus Vinicius Rodrigues da Silva</p>
+      <p>Linguagem de Programação: Análise e Visualização de Dados com Python. Avaliação G1, Tema 7: Consumo de Água no
+        Brasil.</p>
+    </div>
+  </footer>
+
+</body>
+
+</html>
