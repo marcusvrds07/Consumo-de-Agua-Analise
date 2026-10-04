@@ -6,7 +6,7 @@ Projeto de análise e visualização de dados sobre padrões de consumo de água
 
 | Entrega | Link |
 |---|---|
-| Página do projeto (GitHub Pages) | https://github.com/marcusvrds07/Consumo-de-Agua-Analise/ |
+| Página do projeto (GitHub Pages) | https://marcusvrds07.github.io/Consumo-de-Agua-Analise/ |
 | Dashboard (Streamlit Cloud) | https://consumoagua.streamlit.app |
 | Repositório | https://github.com/marcusvrds07/Consumo-de-Agua-Analise/ |
 
