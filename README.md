@@ -2,8 +2,8 @@
 
 Projeto de análise e visualização de dados sobre padrões de consumo de água no Brasil, desenvolvido para a avaliação G1 da disciplina **Linguagem de Programação: Análise e Visualização de Dados com Python** (Tema 7).
 
-**Aluno:** Marcus Vinicius Rodrigues da Silva
-**Professor**: Alexandre Louzada
+**Aluno:** Marcus Vinicius Rodrigues da Silva\n
+**Professor**: Alexandre Louzada\n
 **Disciplina**: Linguagens de Programação
 
 | Entrega | Link |
