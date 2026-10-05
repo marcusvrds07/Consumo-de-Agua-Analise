@@ -218,6 +218,13 @@ st.sidebar.caption(f"{br(len(df), 0)} de {br(len(dados), 0)} medições no recor
 
 st.title("Consumo de Água no Brasil (2015–2024)")
 st.markdown(
+    "**Aluno:** Marcus Vinicius Rodrigues da Silva  \n"
+    "**Professor:** Alexandre Louzada  \n"
+    "**Disciplina:** Linguagens de Programação"
+)
+st.divider()
+
+st.markdown(
     "O crescimento populacional, as mudanças climáticas e o desperdício tornam o monitoramento da água "
     "cada vez mais importante. Este dashboard investiga **onde e em quais setores** a água é consumida, "
     "**se há sazonalidade ou crescimento**, **como chuva e estiagem se relacionam com o consumo** e "
